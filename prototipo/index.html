@@ -1,0 +1,203 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Puriy · App de padres</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: una columna de app móvil (máx. 430px), centrada en escritorio; tarjetas por momento del viaje */
+:root{
+  --bg:#EEF3F3; --surface:#FFFFFF; --ink:#13262C; --muted:#5B6E74; --line:#D7E2E3;
+  --teal:#0F4C5C; --teal-soft:#E1EEF0; --sun:#E09F3E; --sun-soft:#FBEFD9; --sun-ink:#8A5A00;
+  --ok:#1E7F5C; --ok-soft:#DDF1E8; --hero:#0F4C5C;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1A1E; --surface:#12262C; --ink:#E7F0F1; --muted:#9AB0B5; --line:#24404A;
+  --teal:#5FB3C4; --teal-soft:#173A44; --sun:#F0B45A; --sun-soft:#3A2C14; --sun-ink:#F5C77E;
+  --ok:#5CC99E; --ok-soft:#163A2E; --hero:#145A6B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1A1E; --surface:#12262C; --ink:#E7F0F1; --muted:#9AB0B5; --line:#24404A;
+  --teal:#5FB3C4; --teal-soft:#173A44; --sun:#F0B45A; --sun-soft:#3A2C14; --sun-ink:#F5C77E;
+  --ok:#5CC99E; --ok-soft:#163A2E; --hero:#145A6B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 96px}
+.app{max-width:430px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:24px;color:var(--teal);letter-spacing:-.02em}
+.logo svg{width:30px;height:30px}
+.demo-tag{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--sun-ink);background:var(--sun-soft);padding:4px 8px;border-radius:999px;font-weight:600}
+.hello{display:flex;flex-direction:column;gap:2px}
+.hello h1{font-size:26px;font-weight:800;letter-spacing:-.01em}
+.hello p{margin:0;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.trip{background:var(--hero);border-color:var(--hero);color:#fff}
+.trip .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.trip h2{font-size:20px;color:#fff}
+.trip small{color:#CFE4E8;font-size:13px}
+.live{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.live i{width:8px;height:8px;border-radius:50%;background:#7FE0B4;box-shadow:0 0 0 0 rgba(127,224,180,.7);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(127,224,180,0)}100%{box-shadow:0 0 0 0 rgba(127,224,180,0)}}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.facts div{background:rgba(255,255,255,.1);border-radius:12px;padding:8px 10px;min-width:0}
+.facts b{display:block;font-size:15px}
+.facts span{font-size:11px;color:#CFE4E8}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sec-h h2{font-size:17px}
+.sec-h span{font-size:12px;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tl li{display:grid;grid-template-columns:48px 22px 1fr;gap:8px;align-items:start;position:relative;padding-bottom:12px}
+.tl li:last-child{padding-bottom:0}
+.tl time{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);padding-top:1px}
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);background:var(--surface);position:relative;z-index:1;margin-top:1px;display:grid;place-items:center}
+.tl li:not(:last-child) .dot::after{content:"";position:absolute;top:18px;left:50%;width:2px;height:calc(100% + 30px);background:var(--line);transform:translateX(-50%);z-index:-1}
+.done .dot{background:var(--ok);border-color:var(--ok)}
+.done .dot svg{width:10px;height:10px}
+.next .dot{border-color:var(--sun);background:var(--sun-soft)}
+.tl .what b{display:block;font-weight:600;font-size:14px}
+.tl .what span{font-size:12.5px;color:var(--muted)}
+.next .what b{color:var(--sun-ink)}
+.pending .what b{color:var(--muted);font-weight:500}
+.btn{appearance:none;border:0;border-radius:12px;padding:12px 14px;font:600 14px var(--body);cursor:pointer;width:100%}
+.btn:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.btn-sun{background:var(--sun);color:#2A1A00}
+.btn-ghost{background:var(--teal-soft);color:var(--teal)}
+.pay-row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.pay-row b{font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums}
+.pay-row span{font-size:12.5px;color:var(--muted)}
+.bar{height:10px;border-radius:999px;background:var(--teal-soft);overflow:hidden}
+.bar div{height:100%;width:75%;background:var(--teal);border-radius:999px}
+.due{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--sun-soft);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.due b{color:var(--sun-ink)}
+.docs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.doc{display:flex;gap:8px;align-items:center;background:var(--ok-soft);border-radius:12px;padding:10px;font-size:13px;font-weight:500;min-width:0}
+.doc svg{flex:none;width:16px;height:16px;color:var(--ok)}
+.med{font-size:12.5px;color:var(--muted);margin:0}
+.stamps{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.stamp{flex:none;width:76px;height:76px;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:6px;line-height:1.15}
+.stamp.got{border:2px solid var(--teal);color:var(--teal);background:var(--teal-soft);transform:rotate(-6deg)}
+.stamp.got:nth-child(2){transform:rotate(5deg)}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-140%);width:min(400px,calc(100% - 32px));background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 12px 30px rgba(10,30,36,.18);transition:transform .45s cubic-bezier(.2,.9,.3,1.2);z-index:20}
+.toast.show{transform:translate(-50%,0)}
+.toast .ic{flex:none;width:36px;height:36px;border-radius:10px;background:var(--teal);display:grid;place-items:center}
+.toast .ic svg{width:22px;height:22px}
+.toast b{display:block;font-size:13.5px}
+.toast span{font-size:12.5px;color:var(--muted)}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.nav div{max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.nav a{text-decoration:none;color:var(--muted);font-size:11.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px;border-radius:10px}
+.nav a.on{color:var(--teal)}
+.nav svg{width:22px;height:22px}
+@media (prefers-reduced-motion: reduce){.live i{animation:none}.toast{transition:none}}
+</style>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <div class="ic"><svg viewBox="0 0 32 32" fill="none"><path d="M6 24c4-10 9-4 12-10s5-6 8-6" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="1 4.5"/><circle cx="26" cy="8" r="3.2" fill="#E09F3E"/></svg></div>
+  <div><b id="toast-t">Mateo abordó el bus</b><span id="toast-s">Lima · 07:42 · escaneado por Lucía (coordinadora)</span></div>
+</div>
+
+<main class="app">
+  <header class="top">
+    <div class="logo" aria-label="Puriy">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--teal)"/><path d="M7 24c4-10 9-4 12-10s4-6 6.5-6" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 4.2"/><circle cx="25.5" cy="8" r="3" fill="var(--sun)"/></svg>
+      puriy
+    </div>
+    <span class="demo-tag">Datos de ejemplo</span>
+  </header>
+
+  <section class="hello">
+    <h1>Hola, Rosa</h1>
+    <p>Mateo Quispe · 5.° B · Colegio Santa Rosa de Lima</p>
+  </section>
+
+  <section class="card trip" aria-label="Viaje en curso">
+    <div class="row">
+      <div><small>Viaje de promoción</small><h2>Paracas – Ica</h2><small>20 al 23 de noviembre · Agencia de ejemplo</small></div>
+      <span class="live"><i></i>En viaje</span>
+    </div>
+    <div class="facts">
+      <div><b>Día 1</b><span>de 4</span></div>
+      <div><b>42</b><span>a bordo</span></div>
+      <div><b>Lucía M.</b><span>coordinadora</span></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-donde">
+    <div class="sec-h"><h2 id="h-donde">¿Dónde está Mateo?</h2><span>Vía escaneo QR</span></div>
+    <ol class="tl" id="tl"></ol>
+    <button class="btn btn-ghost" id="scan">Simular escaneo de la coordinadora</button>
+  </section>
+
+  <section class="card" aria-labelledby="h-pagos" id="pagos">
+    <div class="sec-h"><h2 id="h-pagos">Cuotas</h2><span>3 de 4 pagadas</span></div>
+    <div class="pay-row"><div><b>S/ 1 650</b><br><span>pagado de S/ 2 200</span></div><span>Sin deudas vencidas</span></div>
+    <div class="bar" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"><div></div></div>
+    <div class="due"><span>Cuota 4 · vence el <b>30 nov</b></span><b>S/ 550</b></div>
+    <button class="btn btn-sun">Pagar cuota 4</button>
+  </section>
+
+  <section class="card" aria-labelledby="h-docs" id="docs">
+    <div class="sec-h"><h2 id="h-docs">Documentos</h2><span>Todo en regla</span></div>
+    <div class="docs">
+      <div class="doc"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>DNI validado</div>
+      <div class="doc"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Autorización de viaje</div>
+      <div class="doc"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ficha médica</div>
+      <div class="doc"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Seguro de viaje</div>
+    </div>
+    <p class="med">La coordinadora ve la ficha médica al escanear el QR: alergia a la penicilina · contacto: Rosa (mamá).</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-pas" id="pasaporte">
+    <div class="sec-h"><h2 id="h-pas">Pasaporte de Mateo</h2><span>2 de 5 sellos</span></div>
+    <div class="stamps">
+      <div class="stamp got">Lima<br>Plaza Mayor</div>
+      <div class="stamp got">Paracas<br>Reserva</div>
+      <div class="stamp">Islas<br>Ballestas</div>
+      <div class="stamp">Huacachina</div>
+      <div class="stamp">Ica<br>Museo Regional</div>
+    </div>
+  </section>
+</main>
+
+<nav class="nav" aria-label="Secciones">
+  <div>
+    <a href="#h-donde" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Viaje</a>
+    <a href="#pagos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Cuotas</a>
+    <a href="#docs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>Documentos</a>
+    <a href="#pasaporte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="11" r="3"/><path d="M9 17h6"/></svg>Pasaporte</a>
+  </div>
+</nav>
+
+<script>
+const events=[
+  {t:"07:42",w:"Abordó el bus",p:"Lima · Plaza San Miguel",by:"Lucía (coordinadora)"},
+  {t:"11:20",w:"Llegó a Paracas",p:"Hotel Bahía · registro de habitación 214",by:"Lucía (coordinadora)"},
+  {t:"13:05",w:"Almuerzo con el grupo",p:"Restaurante El Chorito",by:"Lucía (coordinadora)"},
+  {t:"15:30",w:"Visita a la Reserva Nacional",p:"Paracas · con guía oficial",by:"Guía Javier R."},
+  {t:"19:30",w:"Regreso al hotel",p:"Cena y descanso",by:"Lucía (coordinadora)"}
+];
+let done=2;
+const check='<svg viewBox="0 0 10 10" fill="none"><path d="M2 5.3l2 2 4-4.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function render(){
+  document.getElementById("tl").innerHTML=events.map((e,i)=>{
+    const s=i<done?"done":i===done?"next":"pending";
+    const sub=i<done?`${e.p} · QR escaneado`:i===done?`${e.p} · próximo`:e.p;
+    return `<li class="${s}"><time>${e.t}</time><span class="dot">${i<done?check:""}</span><div class="what"><b>${e.w}</b><span>${sub}</span></div></li>`;
+  }).join("");
+  const b=document.getElementById("scan");
+  b.disabled=done>=events.length;
+  b.textContent=done>=events.length?"Día 1 completo · Mateo está en el hotel":"Simular escaneo de la coordinadora";
+}
+const toast=document.getElementById("toast");let tmr;
+function notify(e){
+  document.getElementById("toast-t").textContent=`Mateo · ${e.w[0].toLowerCase()+e.w.slice(1)}`;
+  document.getElementById("toast-s").textContent=`${e.p.split(" · ")[0]} · ${e.t} · ${e.by}`;
+  toast.classList.add("show");clearTimeout(tmr);tmr=setTimeout(()=>toast.classList.remove("show"),4200);
+}
+document.getElementById("scan").addEventListener("click",()=>{if(done<events.length){notify(events[done]);done++;render();}});
+render();
+setTimeout(()=>notify(events[0]),700);
+</script>
+</body></html>

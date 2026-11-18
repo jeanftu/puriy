@@ -1,0 +1,19 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "puriy": {
+      ".read": true,
+      "live": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['checkpoint', 'at']) && newData.child('checkpoint').isNumber() && newData.child('checkpoint').val() >= 0 && newData.child('checkpoint').val() <= 3 && newData.child('at').isNumber()"
+      },
+      "scans": {
+        ".write": true,
+        "$key": {
+          ".validate": "$key.matches(/^(embarque|llegada|reserva|hotel)_(mateo|valeria|diego|camila)$/) && newData.hasChildren(['student', 'cp', 'at']) && newData.child('cp').isNumber() && newData.child('at').isNumber() && newData.child('student').isString()"
+        }
+      }
+    }
+  }
+}

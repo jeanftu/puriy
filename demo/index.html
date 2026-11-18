@@ -1,0 +1,537 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script><script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-database-compat.js"></script><script>window.PURIY_AGENCY = "Agencia de ejemplo";</script><script src="config.js"></script></head><body><title>Puriy en vivo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: proyector = teléfono del padre + panel de la agencia lado a lado; en celular cada vista ocupa la pantalla */
+:root{
+  --bg:#E9F0F1; --surface:#FFFFFF; --ink:#13262C; --muted:#5B6E74; --line:#D5E1E3;
+  --teal:#0F4C5C; --hero:#0F4C5C; --teal-soft:#E1EEF0; --sun:#E09F3E; --sun-soft:#FBEFD9; --sun-ink:#8A5A00;
+  --ok:#1E7F5C; --ok-soft:#DDF1E8; --bad:#B4432C; --bad-soft:#F8E3DE; --stage:#0B2F38;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Inter","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A181C; --surface:#11252B; --ink:#E6EFF0; --muted:#97AEB3; --line:#24404A;
+  --teal:#6CBCCC; --hero:#145A6B; --teal-soft:#173A44; --sun:#F0B45A; --sun-soft:#3A2C14; --sun-ink:#F5C77E;
+  --ok:#5CC99E; --ok-soft:#163A2E; --bad:#F08A72; --bad-soft:#3D1F18; --stage:#06171C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A181C; --surface:#11252B; --ink:#E6EFF0; --muted:#97AEB3; --line:#24404A;
+  --teal:#6CBCCC; --hero:#145A6B; --teal-soft:#173A44; --sun:#F0B45A; --sun-soft:#3A2C14; --sun-ink:#F5C77E;
+  --ok:#5CC99E; --ok-soft:#163A2E; --bad:#F08A72; --bad-soft:#3D1F18; --stage:#06171C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 32px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+button{font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.warn{background:var(--sun-soft);color:var(--sun-ink)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)} .chip.idle{background:var(--teal-soft);color:var(--teal)}
+
+/* ---------- top bar ---------- */
+.bar{max-width:1400px;margin:0 auto 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:24px;color:var(--teal);letter-spacing:-.02em;text-decoration:none}
+.logo svg{width:30px;height:30px;flex:none}
+.bar .tag{font-size:12px;font-weight:600;color:var(--muted)}
+.bar .sp{flex:1}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.conn.on i{background:#2DBE7E;box-shadow:0 0 0 3px rgba(45,190,126,.2)} .conn.local i{background:var(--sun)}
+.views{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px}
+.views a{font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:9px}
+.views a.on{background:var(--teal);color:#fff}
+.ghost{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:600}
+.banner{max-width:1400px;margin:0 auto 12px;background:var(--sun-soft);color:var(--sun-ink);border-radius:12px;padding:10px 14px;font-size:13.5px}
+.sim{max-width:1400px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;font-weight:600;color:var(--muted)}
+.sim button{background:var(--surface);border:1px solid var(--line);color:var(--teal);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+.sim button.done{background:var(--ok-soft);border-color:var(--ok-soft);color:var(--ok)}
+
+/* ---------- demo stage ---------- */
+.stage{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:410px minmax(0,1fr);gap:22px;align-items:start}
+.phone{background:var(--stage);border-radius:44px;padding:12px;box-shadow:0 24px 60px rgba(8,30,36,.28);position:relative}
+.screen{background:var(--bg);border-radius:34px;height:min(820px,calc(100vh - 110px));min-height:600px;overflow:auto;position:relative}
+.screen .app{padding:16px 14px 24px}
+.notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:var(--stage);border-radius:0 0 16px 16px;z-index:3}
+.who{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.who button{background:transparent;border:1px solid rgba(255,255,255,.25);color:#CFE4E8;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+.who button.on{background:#fff;color:var(--stage);border-color:#fff}
+.who span{color:#9FC1C8;font-size:12px;align-self:center}
+
+/* ---------- parent app ---------- */
+.app{display:flex;flex-direction:column;gap:12px}
+.app-top{display:flex;align-items:center;justify-content:space-between;padding-top:18px}
+.app-top .logo{font-size:21px}.app-top .logo svg{width:26px;height:26px}
+.hello h2{font-size:24px;font-weight:800}
+.hello p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.trip{background:var(--hero);border-color:var(--hero);color:#fff}
+.trip .row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.trip h3{font-size:19px;color:#fff}
+.trip small{color:#CFE4E8;font-size:12.5px}
+.live{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);padding:4px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.live i{width:8px;height:8px;border-radius:50%;background:#7FE0B4;animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,224,180,.7)}70%{box-shadow:0 0 0 8px rgba(127,224,180,0)}100%{box-shadow:0 0 0 0 rgba(127,224,180,0)}}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sec-h h3{font-size:16px}
+.sec-h span{font-size:12px;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:46px 20px 1fr;gap:8px;align-items:start;padding-bottom:12px;position:relative}
+.tl li:last-child{padding-bottom:0}
+.tl time{font-size:13px;color:var(--muted);padding-top:1px}
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;position:relative;z-index:1}
+.tl li:not(:last-child)::after{content:"";position:absolute;left:63px;top:20px;bottom:0;width:2px;background:var(--line)}
+.tl .done .dot{background:var(--ok);border-color:var(--ok)}
+.tl .next .dot{border-color:var(--sun);background:var(--sun-soft)}
+.tl .what b{display:block;font-size:14px;font-weight:600}
+.tl .what span{font-size:12.5px;color:var(--muted)}
+.tl .next .what b{color:var(--sun-ink)} .tl .pending .what b{color:var(--muted);font-weight:500}
+.tl .fresh{animation:flash 2.4s ease-out}
+@keyframes flash{0%{background:var(--ok-soft)}100%{background:transparent}}
+.pay{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.pay b{font-family:var(--display);font-size:24px}
+.bar-p{height:9px;border-radius:999px;background:var(--teal-soft);overflow:hidden}
+.bar-p div{height:100%;background:var(--teal);border-radius:999px}
+.due{display:flex;justify-content:space-between;gap:8px;align-items:center;border-radius:12px;padding:9px 11px;font-size:13px}
+.due.warn{background:var(--sun-soft);color:var(--sun-ink)} .due.bad{background:var(--bad-soft);color:var(--bad)} .due.ok{background:var(--ok-soft);color:var(--ok)}
+.docs{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.doc{display:flex;gap:7px;align-items:center;background:var(--ok-soft);color:var(--ink);border-radius:11px;padding:8px 9px;font-size:12.5px;font-weight:500}
+.doc svg{flex:none;width:14px;height:14px;color:var(--ok)}
+.stamps{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px}
+.stamp{flex:none;width:70px;height:70px;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;text-align:center;font-size:10.5px;font-weight:600;color:var(--muted);padding:6px;line-height:1.15}
+.stamp.got{border:2px solid var(--teal);color:var(--teal);background:var(--teal-soft);transform:rotate(-6deg)}
+.stamp.got:nth-child(even){transform:rotate(5deg)}
+
+/* toast */
+.toast{position:absolute;left:10px;right:10px;top:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:11px 12px;display:flex;gap:10px;align-items:center;box-shadow:0 12px 30px rgba(10,30,36,.25);transform:translateY(-150%);transition:transform .45s cubic-bezier(.2,.9,.3,1.2);z-index:5}
+.toast.show{transform:translateY(0)}
+.toast:not(.show){box-shadow:none}
+.page-toast{position:fixed;left:50%;right:auto;width:min(400px,calc(100% - 32px));transform:translate(-50%,-220%);top:calc(10px + env(safe-area-inset-top,0px))}
+.page-toast.show{transform:translate(-50%,0)}
+.toast .ic{flex:none;width:36px;height:36px;border-radius:10px;background:#0F4C5C;display:grid;place-items:center}
+.toast .ic svg{width:22px;height:22px}
+.toast b{display:block;font-size:13.5px}
+.toast span{font-size:12px;color:var(--muted)}
+
+/* ---------- agency panel ---------- */
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.ph h2{font-size:26px;font-weight:800;letter-spacing:-.01em}
+.ph p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.cp-now{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:13px}
+.cp-now b{color:var(--teal)}
+.kpis{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--display);font-size:30px;font-weight:800;line-height:1.05}
+.kpi .s{font-size:12.5px;color:var(--muted)}
+.kpi.board{background:var(--hero);border-color:var(--hero);color:#fff}
+.kpi.board .l,.kpi.board .s{color:#CFE4E8}
+.kpi.board .v{font-size:44px}
+.kpi.board.all{background:var(--ok);border-color:var(--ok)}
+.kpi .bar-p{background:rgba(255,255,255,.18)} .kpi .bar-p div{background:var(--sun)}
+.kpi.board.all .bar-p div{background:#fff}
+.bump{animation:bump .5s ease-out}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.03)}100%{transform:scale(1)}}
+.cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;align-items:start}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;padding:0 8px 8px}
+td{padding:9px 8px;border-top:1px solid var(--line);vertical-align:middle}
+td b{font-weight:600}
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto}
+.feed li{display:flex;gap:10px;align-items:center;font-size:13px;background:var(--bg);border-radius:12px;padding:8px 10px}
+.feed li.new{animation:flash 2.4s ease-out}
+.feed time{font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums}
+.alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 12px;font-size:13px}
+.alert.bad{background:var(--bad-soft)} .alert.warn{background:var(--sun-soft)}
+.alert b{display:block}
+.empty{font-size:13px;color:var(--muted);padding:6px 2px}
+
+/* ---------- coordinator & scan ---------- */
+.mobile{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:20px;color:var(--teal)}
+.stepper div{flex:1;text-align:center}
+.stepper b{display:block;font-family:var(--display);font-size:18px}
+.stu{display:flex;align-items:center;gap:10px}
+.stu .av{flex:none;width:40px;height:40px;border-radius:50%;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;font-weight:700}
+.stu .nm{flex:1;min-width:0}
+.stu .nm b{display:block}
+.stu .nm span{font-size:12.5px;color:var(--muted)}
+.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:600;font-size:14px}
+.btn-sun{background:var(--sun);color:#2A1A00}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-soft{background:var(--teal-soft);color:var(--teal)}
+.btn-bad{background:var(--bad-soft);color:var(--bad)}
+.btn-sm{padding:8px 12px;font-size:13px}
+.big-ok{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:22px 14px}
+.big-ok .ring{width:96px;height:96px;border-radius:50%;background:var(--ok);display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,.9,.3,1.4)}
+.big-ok .ring.warn{background:var(--sun)}
+.big-ok .ring svg{width:52px;height:52px}
+@keyframes pop{0%{transform:scale(.4)}100%{transform:scale(1)}}
+.big-ok h2{font-size:26px}
+.med{background:var(--bad-soft);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--bad-soft);border-radius:12px;padding:10px 12px;font-size:13px}
+
+@media (max-width:1100px){.kpis{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}}
+@media (max-width:860px){.stage{grid-template-columns:1fr}.stage .phone{max-width:410px;margin:0 auto;width:100%}}
+@media (max-width:520px){
+  .stage .phone{background:transparent;box-shadow:none;padding:0;border-radius:0}
+  .stage .screen{height:auto;min-height:0;overflow:visible;border-radius:0}
+  .stage .screen .app{padding:0}
+  .notch,.who{display:none}
+  .kpis{grid-template-columns:1fr}
+  .views{width:100%;justify-content:space-between}
+}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="bar">
+  <a class="logo" href="#demo" aria-label="Puriy">
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0F4C5C"/><path d="M7 24c4-10 9-4 12-10s4-6 6.5-6" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 4.2"/><circle cx="25.5" cy="8" r="3" fill="#E09F3E"/></svg>
+    puriy
+  </a>
+  <span class="tag">Demo en vivo · datos de ejemplo</span>
+  <span class="sp"></span>
+  <span class="conn" id="conn"><i></i><span id="conn-t">Conectando…</span></span>
+  <button class="ghost" id="sound" type="button" aria-pressed="false">Activar sonido</button>
+  <nav class="views" aria-label="Vistas">
+    <a href="#demo" data-v="demo">Proyector</a>
+    <a href="#padre" data-v="padre">Padre</a>
+    <a href="#agencia" data-v="agencia">Agencia</a>
+    <a href="#coordinador" data-v="coordinador">Coordinador</a>
+  </nav>
+</header>
+<div class="banner" id="banner" hidden></div>
+<div class="sim" id="sim" hidden></div>
+<main id="view"></main>
+<div class="toast page-toast" id="ptoast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===== Datos de ejemplo del viaje (ficticios) ===== */
+const TRIP = {name:"Paracas – Ica", school:"Colegio Santa Rosa de Lima", grade:"5.° de secundaria", dates:"20 al 23 de noviembre", agency:(window.PURIY_AGENCY || "Amautas Perú Tours"), coord:"Lucía M.", total:42, base:38};
+const CPS = [
+  {id:"embarque", what:"Abordó el bus", where:"Lima · Plaza San Miguel", short:"Embarque en Lima", stamp:"Lima<br>Plaza Mayor"},
+  {id:"llegada", what:"Llegó a Paracas", where:"Hotel Bahía · registro de habitación", short:"Llegada a Paracas", stamp:"Paracas"},
+  {id:"reserva", what:"Visita a la Reserva Nacional", where:"Paracas · con guía oficial", short:"Reserva Nacional", stamp:"Reserva<br>Nacional"},
+  {id:"hotel", what:"Regreso al hotel", where:"Cena y descanso", short:"Regreso al hotel", stamp:null}
+];
+const FUTURE_STAMPS = ["Islas<br>Ballestas","Huacachina"];
+const STU = {
+  mateo:{name:"Mateo Quispe", grade:"5.° B", parent:"Rosa", rel:"mamá", med:"Alergia a la penicilina", paid:3, recargo:0, note:null},
+  valeria:{name:"Valeria Huamán", grade:"5.° A", parent:"Jorge", rel:"papá", med:"Sin alergias registradas", paid:3, recargo:0, note:null},
+  diego:{name:"Diego Rojas", grade:"5.° B", parent:"Carmen", rel:"mamá", med:"Asma: lleva inhalador", paid:2, recargo:0, note:"overdue"},
+  camila:{name:"Camila Torres", grade:"5.° A", parent:"Patricia", rel:"mamá", med:"Sin alergias registradas", paid:3, recargo:100, note:"late"}
+};
+const IDS = Object.keys(STU);
+const CUOTAS = [{n:"Transporte",v:200},{n:"Hospedaje",v:200},{n:"Extras",v:100}];
+
+/* ===== Estado ===== */
+const S = {cp:0, scans:{}, mode:"connecting", who:"mateo", loaded:false, writable:true, confirmReset:false};
+let db = null, seen = new Set(), freshIds = new Set(), soundOn = false, audioCtx = null;
+
+const $ = s => document.querySelector(s);
+const hhmm = ms => new Date(ms).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit",hour12:false});
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const scanKey = (cp, id) => CPS[cp].id + "_" + id;
+const scanOf = (cp, id) => S.scans[scanKey(cp, id)];
+const boardedNow = () => TRIP.base + IDS.filter(id => scanOf(S.cp, id)).length;
+const CHECK = '<svg viewBox="0 0 10 10" fill="none" width="10" height="10"><path d="M2 5.3l2 2 4-4.6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const TICK = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const MARK = '<svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0F4C5C"/><path d="M7 24c4-10 9-4 12-10s4-6 6.5-6" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 4.2"/><circle cx="25.5" cy="8" r="3" fill="#E09F3E"/></svg>';
+
+/* ===== Vistas ===== */
+function parentApp(id){
+  const st = STU[id];
+  const tl = CPS.map((c,i) => {
+    const sc = scanOf(i,id);
+    const cls = sc ? "done" : i === S.cp ? "next" : "pending";
+    const fresh = sc && freshIds.has(scanKey(i,id)) ? " fresh" : "";
+    const sub = sc ? `${c.where} · QR escaneado` : i === S.cp ? `${c.where} · en curso` : c.where;
+    return `<li class="${cls}${fresh}"><time class="num">${sc ? hhmm(sc.at) : "—"}</time><span class="dot">${sc ? CHECK : ""}</span><div class="what"><b>${c.what}</b><span>${sub}</span></div></li>`;
+  }).join("");
+  const total = 500 + st.recargo, paidAmt = CUOTAS.slice(0, st.paid).reduce((a,c)=>a+c.v,0) + (st.paid===3 ? st.recargo : 0);
+  const pct = Math.round(paidAmt/total*100);
+  let due;
+  if (st.note === "overdue") due = `<div class="due bad"><span>Cuota 3 · Extras · <b>vencida</b></span><b class="num">US$ 100</b></div><button class="btn btn-sun" type="button">Pagar cuota 3</button>`;
+  else if (st.recargo) due = `<div class="due ok"><span>Pagado, con recargo por inscripción tardía</span><b class="num">US$ ${st.recargo}</b></div>`;
+  else due = `<div class="due ok"><span>Viaje pagado por completo</span><b>Al día</b></div>`;
+  const stamps = CPS.map((c,i) => c.stamp ? `<div class="stamp${scanOf(i,id) ? " got" : ""}">${c.stamp}</div>` : "").join("") + FUTURE_STAMPS.map(s => `<div class="stamp">${s}</div>`).join("");
+  const got = CPS.filter((c,i)=>c.stamp && scanOf(i,id)).length;
+  return `<div class="app">
+    <div class="app-top"><span class="logo">${MARK}puriy</span><span class="chip warn">Demo</span></div>
+    <div class="hello"><h2>Hola, ${esc(st.parent)}</h2><p>${esc(st.name)} · ${esc(st.grade)} · ${esc(TRIP.school)}</p></div>
+    <section class="card trip" aria-label="Viaje en curso">
+      <div class="row"><div><small>Viaje de promoción</small><h3>${TRIP.name}</h3><small>${TRIP.dates} · ${TRIP.agency}</small></div><span class="live"><i></i>En viaje</span></div>
+    </section>
+    <section class="card"><div class="sec-h"><h3>¿Dónde está ${esc(st.name.split(" ")[0])}?</h3><span>Vía escaneo QR</span></div><ol class="tl">${tl}</ol></section>
+    <section class="card"><div class="sec-h"><h3>Cuotas</h3><span>${st.paid} de 3 pagadas</span></div>
+      <div class="pay"><div><b class="num">US$ ${paidAmt}</b><br><span class="muted" style="font-size:12.5px">pagado de US$ ${total}</span></div></div>
+      <div class="bar-p" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div style="width:${pct}%"></div></div>${due}</section>
+    <section class="card"><div class="sec-h"><h3>Documentos</h3><span>Todo en regla</span></div>
+      <div class="docs"><div class="doc">${TICK}DNI vigente</div><div class="doc">${TICK}Autorización</div><div class="doc">${TICK}Ficha médica</div><div class="doc">${TICK}Seguro de viaje</div></div></section>
+    <section class="card"><div class="sec-h"><h3>Pasaporte</h3><span>${got} de ${CPS.filter(c=>c.stamp).length + FUTURE_STAMPS.length} sellos</span></div><div class="stamps">${stamps}</div></section>
+  </div>`;
+}
+
+function agencyPanel(){
+  const n = boardedNow(), all = n >= TRIP.total;
+  const rows = IDS.map(id => {
+    const st = STU[id], sc = scanOf(S.cp, id);
+    const pay = st.note === "overdue" ? '<span class="chip bad">Cuota 3 vencida</span>' : st.recargo ? `<span class="chip warn">Recargo US$ ${st.recargo}</span>` : '<span class="chip ok">Al día</span>';
+    const cp = sc ? `<span class="chip ok">✓ ${hhmm(sc.at)}</span>` : '<span class="chip idle">Pendiente</span>';
+    return `<tr><td><b>${esc(st.name)}</b><br><span class="muted" style="font-size:12px">${esc(st.grade)}</span></td><td>${pay}</td><td><span class="chip ok">Vigente</span></td><td>${cp}</td></tr>`;
+  }).join("");
+  const feedItems = Object.entries(S.scans).sort((a,b)=>b[1].at-a[1].at).slice(0,8).map(([k,sc]) =>
+    `<li class="${freshIds.has(k) ? "new" : ""}"><time>${hhmm(sc.at)}</time><span><b>${esc(STU[sc.student]?.name || sc.student)}</b> · ${CPS[sc.cp]?.short || ""}</span></li>`).join("");
+  return `<section class="panel" aria-label="Panel de la agencia">
+    <div class="ph"><div><h2>Panel de la agencia</h2><p>${TRIP.agency} · Viaje de promoción ${TRIP.name} · ${TRIP.school}</p></div>
+      <div class="cp-now">Punto de control: <b>${CPS[S.cp].short}</b></div></div>
+    <div class="kpis">
+      <div class="kpi board${all ? " all" : ""}" id="kboard"><span class="l">${all ? "Todos a bordo" : "A bordo ahora"}</span><span class="v num">${n} / ${TRIP.total}</span>
+        <div class="bar-p"><div style="width:${Math.round(n/TRIP.total*100)}%"></div></div><span class="s">${all ? "Grupo completo · " + CPS[S.cp].short : "Faltan " + (TRIP.total - n) + " · " + CPS[S.cp].short}</span></div>
+      <div class="kpi"><span class="l">Cuotas al día</span><span class="v num">41 / 42</span><span class="s">98 % pagado a tiempo</span></div>
+      <div class="kpi"><span class="l">DNI validados</span><span class="v num">42 / 42</span><span class="s">Vigentes al cierre de aforo</span></div>
+      <div class="kpi"><span class="l">Recargos automáticos</span><span class="v num">US$ 100</span><span class="s">1 inscripción tardía</span></div>
+    </div>
+    <div class="cols">
+      <div class="card"><div class="sec-h"><h3>Pasajeros con tarjeta QR</h3><span>${TRIP.base} más registrados por la coordinadora</span></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Alumno</th><th>Cuotas</th><th>DNI</th><th>${CPS[S.cp].short}</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div class="panel" style="gap:14px">
+        <div class="card"><div class="sec-h"><h3>Escaneos en vivo</h3><span class="chip ${S.mode==="on"?"ok":"warn"}">${S.mode==="on"?"En tiempo real":"Modo local"}</span></div>
+          ${feedItems ? `<ul class="feed">${feedItems}</ul>` : '<p class="empty">Aún no hay escaneos. Escanea una tarjeta QR con el celular de la coordinadora.</p>'}</div>
+        <div class="card"><div class="sec-h"><h3>Alertas</h3><span>2 activas</span></div>
+          <div class="alert bad"><div><b>Diego Rojas · cuota 3 vencida</b>Extras, US$ 100. Recordatorio enviado por WhatsApp a su mamá.</div></div>
+          <div class="alert warn"><div><b>Camila Torres · inscripción tardía</b>Se integró 1 mes antes del viaje: recargo de US$ 100 aplicado automáticamente.</div></div></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function coordinator(){
+  const n = boardedNow();
+  const list = IDS.map(id => {
+    const st = STU[id], sc = scanOf(S.cp, id);
+    return `<div class="stu"><span class="av">${st.name[0]}</span><div class="nm"><b>${esc(st.name)}</b><span>${sc ? "Registrado " + hhmm(sc.at) : "Pendiente · " + esc(st.med)}</span></div>
+      ${sc ? '<span class="chip ok">✓</span>' : `<button class="btn btn-soft btn-sm" type="button" data-scan="${id}">Registrar</button>`}</div>`;
+  }).join("");
+  return `<div class="mobile">
+    <div class="card"><div class="sec-h"><h3>Coordinadora · ${TRIP.coord}</h3><span>${TRIP.name}</span></div>
+      <div class="stepper"><button type="button" id="cp-prev" aria-label="Punto anterior" ${S.cp===0?"disabled":""}>‹</button>
+        <div><span class="muted" style="font-size:12px">Punto de control ${S.cp+1} de ${CPS.length}</span><b>${CPS[S.cp].short}</b></div>
+        <button type="button" id="cp-next" aria-label="Siguiente punto" ${S.cp===CPS.length-1?"disabled":""}>›</button></div>
+      <div class="due ${n>=TRIP.total?"ok":"warn"}"><span>${n>=TRIP.total?"Todos a bordo":"A bordo"}</span><b class="num">${n} / ${TRIP.total}</b></div></div>
+    <div class="card"><div class="sec-h"><h3>Tarjetas QR de la demo</h3><span>Escanéalas con la cámara</span></div>${list}</div>
+    <div class="card"><div class="sec-h"><h3>Reiniciar la demo</h3></div>
+      ${S.confirmReset ? `<div class="confirm"><span>Se borrarán todos los escaneos y se volverá al embarque.</span><button class="btn btn-bad btn-sm" type="button" id="reset-yes">Sí, reiniciar</button><button class="btn btn-soft btn-sm" type="button" id="reset-no">Cancelar</button></div>`
+        : `<button class="btn btn-soft" type="button" id="reset">Borrar escaneos y volver al embarque</button>`}
+      <p class="muted" style="font-size:12.5px;margin:0">Atajos en el proyector: teclas 1 a 4 registran a cada alumno; N avanza el punto de control.</p></div>
+  </div>`;
+}
+
+function scanScreen(id, result){
+  const st = STU[id];
+  if (!st) return `<div class="mobile"><div class="card big-ok"><h2>Tarjeta no reconocida</h2><p class="muted">Este QR no pertenece al viaje de la demo.</p><a class="btn btn-teal" href="#coordinador">Ir al panel de la coordinadora</a></div></div>`;
+  const c = CPS[S.cp];
+  let head;
+  if (!result) head = `<div class="ring warn"></div><h2>Registrando a ${esc(st.name.split(" ")[0])}…</h2>`;
+  else if (result.status === "dup") head = `<div class="ring warn"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>${esc(st.name)} ya estaba registrado</h2><p class="muted">${c.short} · ${hhmm(result.at)}</p>`;
+  else if (result.status === "ok") head = `<div class="ring"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>${esc(st.name)} registrado</h2><p class="muted">${c.short} · ${hhmm(result.at)} · su ${st.rel} ${esc(st.parent)} ya recibió el aviso</p>`;
+  else head = `<div class="ring warn"></div><h2>No se pudo registrar</h2><p class="muted">${esc(result.msg)}</p>`;
+  return `<div class="mobile"><div class="card big-ok">${head}</div>
+    <div class="card"><div class="sec-h"><h3>Ficha de emergencia</h3><span>${esc(st.grade)}</span></div>
+      <div class="med"><b>${esc(st.med)}</b><br>Contacto: ${esc(st.parent)} (${st.rel}) · Seguro de viaje activo</div></div>
+    <a class="btn btn-teal" href="#coordinador" style="text-align:center;text-decoration:none">Ver panel de la coordinadora</a></div>`;
+}
+
+/* ===== Render ===== */
+let scanResult = null, lastView = "";
+function route(){ const h = (location.hash || "").slice(1); return h || (window.innerWidth < 860 ? "padre" : "demo"); }
+function render(){
+  const v = route();
+  document.querySelectorAll(".views a").forEach(a => a.classList.toggle("on", a.dataset.v === v));
+  const el = $("#view");
+  if (v.startsWith("scan-")) { el.innerHTML = scanScreen(v.slice(5), scanResult); }
+  else if (v === "padre") { el.innerHTML = `<div class="mobile">${parentApp(S.who)}</div>`; }
+  else if (v === "agencia") { el.innerHTML = `<div style="max-width:1400px;margin:0 auto">${agencyPanel()}</div>`; }
+  else if (v === "coordinador") { el.innerHTML = coordinator(); }
+  else {
+    if (lastView !== "demo" || !$("#stage")) {
+      el.innerHTML = `<div class="stage" id="stage"><div><div class="phone"><span class="notch"></span><div class="screen" id="screen"><div id="screen-app"></div><div class="toast" id="toast" role="status" aria-live="polite"></div></div></div>
+        <div class="who" id="who"></div></div><div id="panel-slot" style="min-width:0"></div></div>`;
+    }
+    $("#screen-app").innerHTML = parentApp(S.who);
+    $("#who").innerHTML = `<span>Ver como familia de:</span>${IDS.map(id => `<button type="button" data-who="${id}" class="${S.who===id?"on":""}">${STU[id].name.split(" ")[0]}</button>`).join("")}`;
+    $("#panel-slot").innerHTML = agencyPanel();
+  }
+  lastView = v;
+  const sim = $("#sim");
+  sim.hidden = S.mode !== "local" || v.startsWith("scan-");
+  if (!sim.hidden) sim.innerHTML = `<span>Simular escaneo en ${CPS[S.cp].short}:</span>` +
+    IDS.map(id => `<button type="button" data-scan="${id}" class="${scanOf(S.cp,id) ? "done" : ""}">${scanOf(S.cp,id) ? "✓ " : ""}${STU[id].name.split(" ")[0]}</button>`).join("") +
+    `<button type="button" data-act="next" ${S.cp === CPS.length-1 ? "disabled" : ""}>Siguiente punto ›</button><button type="button" data-act="reset">Reiniciar</button>`;
+}
+
+/* ===== Notificación ===== */
+let toastTimer;
+function notify(sc){
+  const v = route();
+  const st = STU[sc.student]; if (!st) return;
+  if ((v === "demo" || v === "padre") && sc.student !== S.who) { /* otra familia: solo el panel lo refleja */ }
+  else if (v === "demo" || v === "padre") {
+    const t = v === "demo" ? $("#toast") : $("#ptoast");
+    if (t) {
+      t.innerHTML = `<div class="ic">${'<svg viewBox="0 0 32 32" fill="none"><path d="M6 24c4-10 9-4 12-10s5-6 8-6" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="1 4.5"/><circle cx="26" cy="8" r="3.2" fill="#E09F3E"/></svg>'}</div><div><b>${esc(st.name.split(" ")[0])} · ${CPS[sc.cp].what.charAt(0).toLowerCase() + CPS[sc.cp].what.slice(1)}</b><span>${CPS[sc.cp].where.split(" · ")[0]} · ${hhmm(sc.at)} · ${TRIP.coord} (coordinadora)</span></div>`;
+      requestAnimationFrame(() => t.classList.add("show"));
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 5000);
+    }
+  }
+  const kb = $("#kboard"); if (kb) { kb.classList.remove("bump"); void kb.offsetWidth; kb.classList.add("bump"); }
+  ding();
+}
+function ding(){
+  if (!soundOn) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    [880, 1320].forEach((f,i) => { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = f; o.type = "sine";
+      g.gain.setValueAtTime(0.0001, now + i*0.12); g.gain.exponentialRampToValueAtTime(0.25, now + i*0.12 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.12 + 0.35);
+      o.connect(g).connect(audioCtx.destination); o.start(now + i*0.12); o.stop(now + i*0.12 + 0.4); });
+  } catch(e) {}
+}
+
+/* ===== Datos: escritura ===== */
+async function registerScan(id){
+  if (!STU[id]) return {status:"error", msg:"Tarjeta desconocida"};
+  const key = scanKey(S.cp, id);
+  if (S.scans[key]) return {status:"dup", at:S.scans[key].at};
+  const body = {student:id, cp:S.cp, at:Date.now()};
+  if (S.mode === "on" && store) {
+    try {
+      const prev = await store.getScan(key);
+      if (prev) return {status:"dup", at:prev.at};
+      await store.setScan(key, body);
+      return {status:"ok", at:body.at};
+    } catch(e) { return {status:"error", msg: e && e.code === "invalid_argument" ? "Tu cuenta no puede registrar en esta demo." : "Sin conexión. Inténtalo de nuevo."}; }
+  }
+  applyScans({...S.scans, [key]: body}, [key]);
+  return {status:"ok", at:body.at};
+}
+async function setCp(cp){
+  cp = Math.max(0, Math.min(CPS.length-1, cp));
+  if (S.mode === "on" && store) { try { await store.setLive(cp); return; } catch(e) {} }
+  S.cp = cp; render();
+}
+async function resetDemo(){
+  S.confirmReset = false;
+  if (S.mode === "on" && store) {
+    try { await store.reset(); }
+    catch(e) { showBanner("No se pudo reiniciar: revisa la conexión."); }
+  } else { S.scans = {}; S.cp = 0; seen = new Set(); render(); }
+}
+
+/* ===== Almacenes compartidos: base de datos del artifact de Claude o Firebase Realtime Database ===== */
+let store = null;
+function claudeStore(db){
+  return {
+    async getScan(k){ const d = await db.collection("scans").doc(k).get(); return d.exists ? d.data() : null; },
+    setScan(k, body){ return db.collection("scans").doc(k).set(body); },
+    setLive(cp){ return db.doc("trip/live").set({checkpoint:cp, at:Date.now()}); },
+    async reset(){ const q = await db.collection("scans").get(); for (const d of q.docs) await db.collection("scans").doc(d.id).delete(); await db.doc("trip/live").set({checkpoint:0, at:Date.now()}); },
+    subscribe(onLive, onScans, onError){
+      db.doc("trip/live").onSnapshot(s => onLive(s.exists ? (s.data().checkpoint || 0) : 0), () => {});
+      db.collection("scans").onSnapshot(s => { const next = {}; s.docs.forEach(d => { next[d.id] = d.data(); }); onScans(next, !s.metadata.fromCache); }, onError);
+    }
+  };
+}
+function firebaseStore(cfg){
+  const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
+  const rdb = firebase.database(app), root = rdb.ref("puriy");
+  return {
+    async getScan(k){ const s = await root.child("scans/" + k).get(); return s.exists() ? s.val() : null; },
+    setScan(k, body){ return root.child("scans/" + k).set(body); },
+    setLive(cp){ return root.child("live").set({checkpoint:cp, at:Date.now()}); },
+    async reset(){ await root.child("scans").remove(); await root.child("live").set({checkpoint:0, at:Date.now()}); },
+    subscribe(onLive, onScans, onError){
+      root.child("live").on("value", s => onLive(s.exists() ? (s.val().checkpoint || 0) : 0), () => {});
+      root.child("scans").on("value", s => onScans(s.val() || {}, true), onError);
+    }
+  };
+}
+
+/* ===== Datos: lectura ===== */
+function applyScans(next, newKeys){
+  S.scans = next;
+  newKeys.forEach(k => { freshIds.add(k); setTimeout(() => freshIds.delete(k), 2600); });
+  render();
+  newKeys.forEach(k => notify(S.scans[k]));
+}
+function showBanner(t){ const b = $("#banner"); b.textContent = t; b.hidden = !t; }
+function setConn(mode){
+  S.mode = mode;
+  const c = $("#conn"); c.className = "conn" + (mode === "on" ? " on" : mode === "local" ? " local" : "");
+  $("#conn-t").textContent = mode === "on" ? "En vivo" : mode === "local" ? "Modo local" : "Conectando…";
+}
+async function connect(){
+  let timer = setTimeout(() => { if (S.mode !== "on") { setConn("local"); showBanner("No hay conexión con la base de datos compartida: los escaneos se simulan en esta pantalla (teclas 1 a 4 o la vista Coordinador)."); render(); maybeScanFromHash(); } }, 10000);
+  try {
+    if (window.PURIY_FIREBASE && window.firebase) store = firebaseStore(window.PURIY_FIREBASE);
+    else { db = window.claude && window.claude.use ? await window.claude.use("db") : null; if (db) store = claudeStore(db); }
+  } catch(e) { store = null; }
+  if (!store) { clearTimeout(timer); setConn("local"); showBanner(window.claude ? "Modo local: abre esta demo con tu sesión de claude.ai para sincronizar el celular y el proyector." : "Versión de demostración: toca los botones de abajo para simular el escaneo de cada tarjeta QR y mira cómo reaccionan la app del padre y el panel de la agencia."); render(); maybeScanFromHash(); return; }
+  store.subscribe(cp => { if (cp !== S.cp) { S.cp = cp; render(); } }, (next, confirmed) => {
+    if (confirmed) { clearTimeout(timer); if (S.mode !== "on") { setConn("on"); showBanner(""); } }
+    const fresh = S.loaded ? Object.keys(next).filter(k => !seen.has(k)) : [];
+    Object.keys(next).forEach(k => seen.add(k));
+    Object.keys(S.scans).forEach(k => { if (!next[k]) seen.delete(k); });
+    S.loaded = true;
+    applyScans(next, fresh);
+    maybeScanFromHash();
+  }, e => { clearTimeout(timer); setConn("local"); showBanner("Se perdió la conexión en vivo: modo local activado."); render(); });
+}
+
+/* ===== Escaneo desde el QR (#scan-<id>) ===== */
+let scanning = "";
+async function maybeScanFromHash(){
+  const v = route();
+  if (!v.startsWith("scan-")) return;
+  if (scanning === v) return;
+  if (S.mode === "connecting") return;
+  scanning = v; scanResult = null; render();
+  scanResult = await registerScan(v.slice(5));
+  render();
+}
+
+/* ===== Eventos ===== */
+document.addEventListener("click", e => {
+  const w = e.target.closest("[data-who]"); if (w) { S.who = w.dataset.who; render(); return; }
+  const s = e.target.closest("[data-scan]"); if (s) { registerScan(s.dataset.scan); return; }
+  const act = e.target.closest("[data-act]");
+  if (act && act.dataset.act === "next") { setCp(S.cp + 1); return; }
+  if (act && act.dataset.act === "reset") { resetDemo(); return; }
+  if (e.target.closest("#cp-prev")) setCp(S.cp - 1);
+  if (e.target.closest("#cp-next")) setCp(S.cp + 1);
+  if (e.target.closest("#reset")) { S.confirmReset = true; render(); }
+  if (e.target.closest("#reset-no")) { S.confirmReset = false; render(); }
+  if (e.target.closest("#reset-yes")) resetDemo();
+});
+$("#sound").addEventListener("click", () => {
+  soundOn = !soundOn; $("#sound").setAttribute("aria-pressed", soundOn); $("#sound").textContent = soundOn ? "Sonido activado" : "Activar sonido";
+  if (soundOn) ding();
+});
+document.addEventListener("keydown", e => {
+  if (e.target.closest("input,textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= IDS.length) registerScan(IDS[n-1]);
+  if (e.key === "n" || e.key === "N") setCp(S.cp + 1);
+});
+window.addEventListener("hashchange", () => { scanning = ""; scanResult = null; render(); maybeScanFromHash(); });
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (!location.hash) render(); }, 200); });
+
+render();
+connect();
+</script>
+</body></html>
